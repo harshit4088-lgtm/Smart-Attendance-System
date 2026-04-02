@@ -1,12 +1,15 @@
 let students = JSON.parse(localStorage.getItem("data")) || [];
 
-// Add student
-function addStudent(){
+// ADD STUDENT
+function addStudent() {
+
 let n = document.getElementById("name").value;
 let r = document.getElementById("roll").value;
 let a = document.getElementById("att").value;
 
-if(!n || !r || !a){
+console.log(n, r, a); // 🔥 debug
+
+if(n === "" || r === "" || a === ""){
 alert("Fill all fields");
 return;
 }
@@ -17,21 +20,17 @@ roll: r,
 att: parseInt(a)
 });
 
-save();
-
-// clear input
-document.getElementById("name").value="";
-document.getElementById("roll").value="";
-document.getElementById("att").value="";
-}
-
-// Save + render
-function save(){
 localStorage.setItem("data", JSON.stringify(students));
+
 render();
+
+// clear fields
+document.getElementById("name").value = "";
+document.getElementById("roll").value = "";
+document.getElementById("att").value = "";
 }
 
-// Render
+// RENDER
 function render(){
 let html = "";
 
@@ -48,16 +47,17 @@ html += `
 document.getElementById("data").innerHTML = html;
 }
 
-// Delete
+// DELETE
 function del(r){
 students = students.filter(s => s.roll !== r);
-save();
+localStorage.setItem("data", JSON.stringify(students));
+render();
 }
 
-// First load
+// LOAD
 render();
 
-// PWA fix
+// PWA
 if ("serviceWorker" in navigator) {
 navigator.serviceWorker.register("sw.js");
 }
