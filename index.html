@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attendance Pro</title>
+
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#6366f1">
+
+</head>
+
+<body>
+
+<h2>📊 Attendance Dashboard</h2>
+
+<div class="main-layout">
+
+<div class="sidebar">
+<input id="name" placeholder="Name">
+<input id="roll" placeholder="Roll No">
+<input id="att" placeholder="Attendance %">
+<button onclick="addStudent()">Add Student</button>
+</div>
+
+<div class="content">
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Roll</th>
+<th>Attendance</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody id="data"></tbody>
+</table>
+</div>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
