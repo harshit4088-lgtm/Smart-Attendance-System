@@ -1,15 +1,24 @@
+// Load data
 let students = JSON.parse(localStorage.getItem("data")) || [];
 
-// ADD STUDENT
+// Wait till page loads
+window.onload = function () {
+
+render();
+
+// Button click event
+document.getElementById("addBtn").addEventListener("click", addStudent);
+
+};
+
+// Add Student
 function addStudent() {
 
-let n = document.getElementById("name").value;
-let r = document.getElementById("roll").value;
-let a = document.getElementById("att").value;
+let n = document.getElementById("name").value.trim();
+let r = document.getElementById("roll").value.trim();
+let a = document.getElementById("att").value.trim();
 
-console.log(n, r, a); // 🔥 debug
-
-if(n === "" || r === "" || a === ""){
+if (n === "" || r === "" || a === "") {
 alert("Fill all fields");
 return;
 }
@@ -20,21 +29,24 @@ roll: r,
 att: parseInt(a)
 });
 
+// Save
 localStorage.setItem("data", JSON.stringify(students));
 
-render();
-
-// clear fields
+// Clear input
 document.getElementById("name").value = "";
 document.getElementById("roll").value = "";
 document.getElementById("att").value = "";
+
+// Refresh table
+render();
 }
 
-// RENDER
-function render(){
+// Render Table
+function render() {
+
 let html = "";
 
-students.forEach(s=>{
+students.forEach(s => {
 html += `
 <tr>
 <td>${s.name}</td>
@@ -47,17 +59,9 @@ html += `
 document.getElementById("data").innerHTML = html;
 }
 
-// DELETE
-function del(r){
-students = students.filter(s => s.roll !== r);
+// Delete Student
+function del(roll) {
+students = students.filter(s => s.roll !== roll);
 localStorage.setItem("data", JSON.stringify(students));
 render();
-}
-
-// LOAD
-render();
-
-// PWA
-if ("serviceWorker" in navigator) {
-navigator.serviceWorker.register("sw.js");
 }
