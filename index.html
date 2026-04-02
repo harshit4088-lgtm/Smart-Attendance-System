@@ -5,13 +5,67 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Attendance System</title>
 
-<link rel="stylesheet" href="style.css">
+<style>
+body{font-family:sans-serif;margin:0;background:#0f172a;color:white}
+h2{text-align:center}
+
+/* login */
+#login{display:flex;flex-direction:column;align-items:center;margin-top:100px}
+#login input{padding:10px;margin:5px;width:200px}
+#login button{padding:10px}
+
+/* layout */
+.main-layout{display:grid;grid-template-columns:300px 1fr;gap:15px;padding:15px}
+
+.sidebar,.content{background:white;color:black;padding:15px;border-radius:10px}
+
+@media(max-width:768px){
+.main-layout{grid-template-columns:1fr}
+}
+
+input,button{width:100%;padding:10px;margin-bottom:10px}
+
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px;border-bottom:1px solid #ddd}
+
+/* modal */
+#modal{
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.7);
+justify-content:center;
+align-items:center;
+}
+
+.modal-box{
+background:white;
+color:black;
+padding:20px;
+border-radius:10px;
+width:300px;
+}
+</style>
 
 </head>
 
 <body>
 
-<h2 style="text-align:center">📊 Attendance Dashboard</h2>
+<!-- LOGIN -->
+<div id="login">
+<h2>Admin Login</h2>
+<input id="user" placeholder="Username">
+<input id="pass" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+</div>
+
+<!-- MAIN -->
+<div id="main" style="display:none">
+
+<h2>📊 Attendance Dashboard</h2>
 
 <div class="main-layout">
 
@@ -19,8 +73,13 @@
 <input id="name" placeholder="Name">
 <input id="roll" placeholder="Roll No">
 <input id="att" placeholder="Attendance %">
+<input id="course" placeholder="Course">
+<input id="dept" placeholder="Department">
+<input id="father" placeholder="Father Name">
+<input id="mobile" placeholder="Mobile">
+<input id="address" placeholder="Address">
 
-<button id="addBtn">Add Student</button>
+<button onclick="addStudent()">Add Student</button>
 </div>
 
 <div class="content">
@@ -30,6 +89,7 @@
 <th>Name</th>
 <th>Roll</th>
 <th>Attendance</th>
+<th>Status</th>
 <th>Action</th>
 </tr>
 </thead>
@@ -39,8 +99,137 @@
 
 </div>
 
-<!-- JS LAST ME -->
-<script src="script.js"></script>
+</div>
+
+<!-- MODAL -->
+<div id="modal">
+<div class="modal-box">
+<h3 id="mName"></h3>
+<p id="mRoll"></p>
+<p id="mAtt"></p>
+<p id="mCourse"></p>
+<p id="mDept"></p>
+<p id="mFather"></p>
+<p id="mMobile"></p>
+<p id="mAddress"></p>
+<button onclick="closeModal()">Close</button>
+</div>
+</div>
+
+<script>
+
+// LOGIN
+function login(){
+if(user.value==="admin" && pass.value==="1234"){
+login.style.display="none";
+main.style.display="block";
+}else{
+alert("Wrong login");
+}
+}
+
+// DATA
+let students = JSON.parse(localStorage.getItem("data")) || [];
+
+// ADD
+function addStudent(){
+
+let n=name.value,r=roll.value,a=att.value;
+
+if(!n||!r||!a){
+alert("Fill required fields");
+return;
+}
+
+students.push({
+name:n,
+roll:r,
+att:parseInt(a),
+course:course.value,
+dept:dept.value,
+father:father.value,
+mobile:mobile.value,
+address:address.value,
+status:"Not Marked"
+});
+
+localStorage.setItem("data",JSON.stringify(students));
+
+document.querySelectorAll("input").forEach(i=>i.value="");
+
+render();
+}
+
+// RENDER
+function render(){
+
+let html="";
+
+students.forEach(s=>{
+
+html+=`
+<tr>
+<td onclick="openProfile('${s.roll}')" style="color:blue;cursor:pointer">${s.name}</td>
+<td>${s.roll}</td>
+<td>${s.att}%</td>
+
+<td>
+<button onclick="mark('${s.roll}','Present')">✅</button>
+<button onclick="mark('${s.roll}','Absent')">❌</button>
+<br>${s.status}
+</td>
+
+<td><button onclick="del('${s.roll}')">🗑️</button></td>
+</tr>
+`;
+});
+
+data.innerHTML=html;
+}
+
+// DELETE
+function del(r){
+students=students.filter(s=>s.roll!==r);
+localStorage.setItem("data",JSON.stringify(students));
+render();
+}
+
+// MARK
+function mark(r,status){
+students=students.map(s=>{
+if(s.roll===r) s.status=status;
+return s;
+});
+localStorage.setItem("data",JSON.stringify(students));
+render();
+}
+
+// PROFILE
+function openProfile(r){
+
+let s=students.find(x=>x.roll===r);
+
+mName.innerText="Name: "+s.name;
+mRoll.innerText="Roll: "+s.roll;
+mAtt.innerText="Attendance: "+s.att+"%";
+mCourse.innerText="Course: "+(s.course||"-");
+mDept.innerText="Dept: "+(s.dept||"-");
+mFather.innerText="Father: "+(s.father||"-");
+mMobile.innerText="Mobile: "+(s.mobile||"-");
+mAddress.innerText="Address: "+(s.address||"-");
+
+modal.style.display="flex";
+}
+
+// CLOSE
+function closeModal(){
+modal.style.display="none";
+}
+
+// LOAD
+render();
+
+</script>
 
 </body>
 </html>
