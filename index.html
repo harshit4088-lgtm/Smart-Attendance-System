@@ -1,200 +1,281 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Attendance System</title>
+<title>Smart Attendance</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
-body{font-family:sans-serif;margin:0;background:#0f172a;color:white}
-h2{text-align:center}
+*{margin:0;padding:0;box-sizing:border-box;font-family:sans-serif}
 
-.main-layout{display:grid;grid-template-columns:300px 1fr;gap:15px;padding:15px}
-
-.sidebar,.content{background:white;color:black;padding:15px;border-radius:10px}
-
-@media(max-width:768px){
-.main-layout{grid-template-columns:1fr}
+body{
+background:linear-gradient(135deg,#6366f1,#0f172a);
+color:white;
 }
 
-input,button{width:100%;padding:10px;margin-bottom:10px}
+/* layout */
+.container{
+display:grid;
+grid-template-columns:300px 1fr;
+gap:15px;
+padding:15px;
+}
 
-table{width:100%;border-collapse:collapse}
+.card{
+background:rgba(255,255,255,0.1);
+backdrop-filter:blur(10px);
+padding:15px;
+border-radius:12px;
+}
+
+/* input */
+input,button{
+width:100%;
+padding:10px;
+margin:5px 0;
+border:none;
+border-radius:8px;
+}
+
+button{cursor:pointer;font-weight:bold}
+
+.green{background:#22c55e;color:white}
+.red{background:#ef4444;color:white}
+.blue{background:#3b82f6;color:white}
+
+/* table */
+table{
+width:100%;
+background:white;
+color:black;
+border-radius:10px;
+overflow:hidden;
+}
+
 th,td{padding:10px;border-bottom:1px solid #ddd}
 
+/* modal */
 #modal{
 display:none;
 position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
+top:0;left:0;width:100%;height:100%;
 background:rgba(0,0,0,0.7);
-justify-content:center;
-align-items:center;
+justify-content:center;align-items:center;
 }
 
 .modal-box{
-background:white;
-color:black;
-padding:20px;
-border-radius:10px;
-width:300px;
+background:white;color:black;
+padding:20px;border-radius:10px;width:300px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>📊 Attendance Dashboard</h2>
+<h2 style="text-align:center">📊 Smart Attendance System</h2>
 
-<div class="main-layout">
+<div class="container">
 
-<div class="sidebar">
+<!-- Sidebar -->
+<div class="card">
+
 <input id="name" placeholder="Name">
 <input id="roll" placeholder="Roll No">
 <input id="att" placeholder="Attendance %">
-<input id="course" placeholder="Course">
-<input id="dept" placeholder="Department">
-<input id="father" placeholder="Father Name">
-<input id="mobile" placeholder="Mobile">
-<input id="address" placeholder="Address">
 
-<button onclick="addStudent()">Add Student</button>
+<button class="green" onclick="addStudent()">Add Student</button>
+
+<hr>
+
+<input id="search" placeholder="🔍 Search..." onkeyup="searchStudent()">
+
+<button class="blue" onclick="showMonthly()">📅 Monthly View</button>
+
+<hr>
+
+<input type="date" id="from">
+<input type="date" id="to">
+<button class="blue" onclick="downloadExcel()">⬇ Download Excel</button>
+
 </div>
 
-<div class="content">
+<!-- Content -->
+<div class="card">
+
 <table>
 <thead>
 <tr>
 <th>Name</th>
 <th>Roll</th>
 <th>Attendance</th>
-<th>Status</th>
+<th>Today</th>
 <th>Action</th>
 </tr>
 </thead>
 <tbody id="data"></tbody>
 </table>
-</div>
+
+<div id="calendar" style="margin-top:10px"></div>
 
 </div>
 
+</div>
+
+<!-- Modal -->
 <div id="modal">
 <div class="modal-box">
 <h3 id="mName"></h3>
 <p id="mRoll"></p>
 <p id="mAtt"></p>
-<p id="mCourse"></p>
-<p id="mDept"></p>
-<p id="mFather"></p>
-<p id="mMobile"></p>
-<p id="mAddress"></p>
 <button onclick="closeModal()">Close</button>
 </div>
 </div>
 
 <script>
 
-// DATA
 let students = JSON.parse(localStorage.getItem("data")) || [];
 
-// ADD STUDENT (FIXED)
+// ADD
 function addStudent(){
 
-let n = document.getElementById("name").value.trim();
-let r = document.getElementById("roll").value.trim();
-let a = document.getElementById("att").value.trim();
+let n=document.getElementById("name").value.trim();
+let r=document.getElementById("roll").value.trim();
+let a=document.getElementById("att").value.trim();
 
-if(n === "" || r === "" || a === ""){
-alert("Fill required fields");
-return;
+if(!n||!r||!a){alert("Fill fields");return;}
+
+students.push({name:n,roll:r,att:parseInt(a),records:{}});
+
+save();
+document.querySelectorAll("input").forEach(i=>i.value="");
 }
 
-students.push({
-name:n,
-roll:r,
-att:parseInt(a),
-course:document.getElementById("course").value,
-dept:document.getElementById("dept").value,
-father:document.getElementById("father").value,
-mobile:document.getElementById("mobile").value,
-address:document.getElementById("address").value,
-status:"Not Marked"
-});
-
+// SAVE
+function save(){
 localStorage.setItem("data",JSON.stringify(students));
-
-// clear inputs
-document.querySelectorAll("input").forEach(i=>i.value="");
-
 render();
 }
 
 // RENDER
-function render(){
+function render(list=students){
 
 let html="";
 
-students.forEach(s=>{
+list.forEach(s=>{
+
+let today=new Date().toISOString().split("T")[0];
+let status=s.records[today]||"-";
 
 html+=`
 <tr>
-<td onclick="openProfile('${s.roll}')" style="color:blue;cursor:pointer">${s.name}</td>
+<td onclick="openProfile('${s.roll}')">${s.name}</td>
 <td>${s.roll}</td>
 <td>${s.att}%</td>
 
 <td>
-<button onclick="mark('${s.roll}','Present')">✅</button>
-<button onclick="mark('${s.roll}','Absent')">❌</button>
-<br>${s.status}
+<button class="green" onclick="mark('${s.roll}','Present')">P</button>
+<button class="red" onclick="mark('${s.roll}','Absent')">A</button>
+<br>${status}
 </td>
 
-<td><button onclick="del('${s.roll}')">🗑️</button></td>
-</tr>
-`;
+<td>
+<button class="red" onclick="del('${s.roll}')">🗑️</button>
+</td>
+</tr>`;
 });
 
-document.getElementById("data").innerHTML=html;
+data.innerHTML=html;
 }
 
 // DELETE
 function del(r){
-students = students.filter(s => s.roll !== r);
-localStorage.setItem("data",JSON.stringify(students));
-render();
+if(!confirm("Delete permanently?")) return;
+students=students.filter(s=>s.roll!==r);
+save();
 }
 
-// MARK ATTENDANCE
+// MARK
 function mark(r,status){
-students = students.map(s=>{
-if(s.roll===r) s.status=status;
+
+let today=new Date().toISOString().split("T")[0];
+
+students=students.map(s=>{
+if(s.roll===r){
+if(!s.records) s.records={};
+s.records[today]=status;
+}
 return s;
 });
-localStorage.setItem("data",JSON.stringify(students));
-render();
+
+save();
+}
+
+// SEARCH
+function searchStudent(){
+let v=document.getElementById("search").value.toLowerCase();
+let filtered=students.filter(s=>
+s.name.toLowerCase().includes(v)||
+s.roll.toLowerCase().includes(v)
+);
+render(filtered);
 }
 
 // PROFILE
 function openProfile(r){
-
-let s = students.find(x => x.roll === r);
-
-document.getElementById("mName").innerText="Name: "+s.name;
-document.getElementById("mRoll").innerText="Roll: "+s.roll;
-document.getElementById("mAtt").innerText="Attendance: "+s.att+"%";
-document.getElementById("mCourse").innerText="Course: "+(s.course||"-");
-document.getElementById("mDept").innerText="Dept: "+(s.dept||"-");
-document.getElementById("mFather").innerText="Father: "+(s.father||"-");
-document.getElementById("mMobile").innerText="Mobile: "+(s.mobile||"-");
-document.getElementById("mAddress").innerText="Address: "+(s.address||"-");
-
-document.getElementById("modal").style.display="flex";
+let s=students.find(x=>x.roll===r);
+mName.innerText=s.name;
+mRoll.innerText=s.roll;
+mAtt.innerText="Attendance: "+s.att+"%";
+modal.style.display="flex";
 }
 
 // CLOSE
 function closeModal(){
-document.getElementById("modal").style.display="none";
+modal.style.display="none";
+}
+
+// MONTHLY
+function showMonthly(){
+
+let html="<h3>Monthly Records</h3>";
+
+students.forEach(s=>{
+html+=`<b>${s.name}</b><br>`;
+if(s.records){
+Object.entries(s.records).forEach(([d,st])=>{
+html+=`${d}: ${st}<br>`;
+});
+}
+html+="<hr>";
+});
+
+document.getElementById("calendar").innerHTML=html;
+}
+
+// DOWNLOAD
+function downloadExcel(){
+
+let f=document.getElementById("from").value;
+let t=document.getElementById("to").value;
+
+let data=[];
+
+students.forEach(s=>{
+if(s.records){
+Object.entries(s.records).forEach(([d,st])=>{
+if((!f||d>=f)&&(!t||d<=t)){
+data.push({Name:s.name,Roll:s.roll,Date:d,Status:st});
+}
+});
+}
+});
+
+let ws=XLSX.utils.json_to_sheet(data);
+let wb=XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb,ws,"Attendance");
+
+XLSX.writeFile(wb,"attendance.xlsx");
 }
 
 // LOAD
