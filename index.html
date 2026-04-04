@@ -9,11 +9,6 @@
 body{font-family:sans-serif;margin:0;background:#0f172a;color:white}
 h2{text-align:center}
 
-/* login */
-#login{display:flex;flex-direction:column;align-items:center;margin-top:100px}
-#login input{padding:10px;margin:5px;width:200px}
-#login button{padding:10px}
-
 /* layout */
 .main-layout{display:grid;grid-template-columns:300px 1fr;gap:15px;padding:15px}
 
@@ -54,17 +49,6 @@ width:300px;
 
 <body>
 
-<!-- LOGIN -->
-<div id="login">
-<h2>Admin Login</h2>
-<input id="user" placeholder="Username">
-<input id="pass" type="password" placeholder="Password">
-<button onclick="login()">Login</button>
-</div>
-
-<!-- MAIN -->
-<div id="main" style="display:none">
-
 <h2>📊 Attendance Dashboard</h2>
 
 <div class="main-layout">
@@ -99,8 +83,6 @@ width:300px;
 
 </div>
 
-</div>
-
 <!-- MODAL -->
 <div id="modal">
 <div class="modal-box">
@@ -117,16 +99,6 @@ width:300px;
 </div>
 
 <script>
-
-// LOGIN
-function login(){
-if(user.value==="admin" && pass.value==="1234"){
-login.style.display="none";
-main.style.display="block";
-}else{
-alert("Wrong login");
-}
-}
 
 // DATA
 let students = JSON.parse(localStorage.getItem("data")) || [];
