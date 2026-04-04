@@ -9,7 +9,6 @@
 body{font-family:sans-serif;margin:0;background:#0f172a;color:white}
 h2{text-align:center}
 
-/* layout */
 .main-layout{display:grid;grid-template-columns:300px 1fr;gap:15px;padding:15px}
 
 .sidebar,.content{background:white;color:black;padding:15px;border-radius:10px}
@@ -23,7 +22,6 @@ input,button{width:100%;padding:10px;margin-bottom:10px}
 table{width:100%;border-collapse:collapse}
 th,td{padding:10px;border-bottom:1px solid #ddd}
 
-/* modal */
 #modal{
 display:none;
 position:fixed;
@@ -44,7 +42,6 @@ border-radius:10px;
 width:300px;
 }
 </style>
-
 </head>
 
 <body>
@@ -83,7 +80,6 @@ width:300px;
 
 </div>
 
-<!-- MODAL -->
 <div id="modal">
 <div class="modal-box">
 <h3 id="mName"></h3>
@@ -103,12 +99,14 @@ width:300px;
 // DATA
 let students = JSON.parse(localStorage.getItem("data")) || [];
 
-// ADD
+// ADD STUDENT (FIXED)
 function addStudent(){
 
-let n=name.value,r=roll.value,a=att.value;
+let n = document.getElementById("name").value.trim();
+let r = document.getElementById("roll").value.trim();
+let a = document.getElementById("att").value.trim();
 
-if(!n||!r||!a){
+if(n === "" || r === "" || a === ""){
 alert("Fill required fields");
 return;
 }
@@ -117,16 +115,17 @@ students.push({
 name:n,
 roll:r,
 att:parseInt(a),
-course:course.value,
-dept:dept.value,
-father:father.value,
-mobile:mobile.value,
-address:address.value,
+course:document.getElementById("course").value,
+dept:document.getElementById("dept").value,
+father:document.getElementById("father").value,
+mobile:document.getElementById("mobile").value,
+address:document.getElementById("address").value,
 status:"Not Marked"
 });
 
 localStorage.setItem("data",JSON.stringify(students));
 
+// clear inputs
 document.querySelectorAll("input").forEach(i=>i.value="");
 
 render();
@@ -156,19 +155,19 @@ html+=`
 `;
 });
 
-data.innerHTML=html;
+document.getElementById("data").innerHTML=html;
 }
 
 // DELETE
 function del(r){
-students=students.filter(s=>s.roll!==r);
+students = students.filter(s => s.roll !== r);
 localStorage.setItem("data",JSON.stringify(students));
 render();
 }
 
-// MARK
+// MARK ATTENDANCE
 function mark(r,status){
-students=students.map(s=>{
+students = students.map(s=>{
 if(s.roll===r) s.status=status;
 return s;
 });
@@ -179,23 +178,23 @@ render();
 // PROFILE
 function openProfile(r){
 
-let s=students.find(x=>x.roll===r);
+let s = students.find(x => x.roll === r);
 
-mName.innerText="Name: "+s.name;
-mRoll.innerText="Roll: "+s.roll;
-mAtt.innerText="Attendance: "+s.att+"%";
-mCourse.innerText="Course: "+(s.course||"-");
-mDept.innerText="Dept: "+(s.dept||"-");
-mFather.innerText="Father: "+(s.father||"-");
-mMobile.innerText="Mobile: "+(s.mobile||"-");
-mAddress.innerText="Address: "+(s.address||"-");
+document.getElementById("mName").innerText="Name: "+s.name;
+document.getElementById("mRoll").innerText="Roll: "+s.roll;
+document.getElementById("mAtt").innerText="Attendance: "+s.att+"%";
+document.getElementById("mCourse").innerText="Course: "+(s.course||"-");
+document.getElementById("mDept").innerText="Dept: "+(s.dept||"-");
+document.getElementById("mFather").innerText="Father: "+(s.father||"-");
+document.getElementById("mMobile").innerText="Mobile: "+(s.mobile||"-");
+document.getElementById("mAddress").innerText="Address: "+(s.address||"-");
 
-modal.style.display="flex";
+document.getElementById("modal").style.display="flex";
 }
 
 // CLOSE
 function closeModal(){
-modal.style.display="none";
+document.getElementById("modal").style.display="none";
 }
 
 // LOAD
