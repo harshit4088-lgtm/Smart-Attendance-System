@@ -138,12 +138,27 @@ th,td{padding:8px;border-bottom:1px solid #ddd}
 <script>
 
 // 🔥 Firebase config (अपना डालना)
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
- apiKey: "YOUR_KEY",
- authDomain: "YOUR_DOMAIN",
- databaseURL: "YOUR_DB",
- projectId: "YOUR_ID"
+  apiKey: "AIzaSyDGd7AS81Q53meBWVADmzDXAv_hwZaMMtw",
+  authDomain: "attendance-app-f5c57.firebaseapp.com",
+  projectId: "attendance-app-f5c57",
+  storageBucket: "attendance-app-f5c57.firebasestorage.app",
+  messagingSenderId: "20575897666",
+  appId: "1:20575897666:web:33ccc40e4c88aa67cf05db",
+  measurementId: "G-SJ0JMYLC69"
 };
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
@@ -155,11 +170,10 @@ localStorage.setItem("role",role);
 if(role!=="teacher") document.getElementById("adminPanel").style.display="none";
 
 // Add
-function addStudent(){
- if(!name.value || !enroll.value){
-  alert("Fill all fields");
-  return;
- }
+ if(students.some(s=>s.enroll===enroll.value)){
+ alert("Enrollment already exists ❌");
+ return;
+}
 
 let s={
  name:name.value,
@@ -174,6 +188,11 @@ students.push(s);
 save();
 alert("Student Added ✅");
 }
+ name.value="";
+enroll.value="";
+course.value="";
+father.value="";
+mobile.value="";
 
 // Save
 function save(){
