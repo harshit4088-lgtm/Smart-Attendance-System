@@ -139,8 +139,6 @@ th,td{padding:8px;border-bottom:1px solid #ddd}
 
 // 🔥 Firebase config (अपना डालना)
 // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -158,8 +156,6 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
@@ -171,29 +167,39 @@ localStorage.setItem("role",role);
 if(role!=="teacher") document.getElementById("adminPanel").style.display="none";
 
 // Add
+function addStudent(){
+
+ if(!name.value || !enroll.value){
+  alert("Fill all fields ❗");
+  return;
+ }
+
  if(students.some(s=>s.enroll===enroll.value)){
- alert("Enrollment already exists ❌");
- return;
-}
+  alert("Enrollment already exists ❌");
+  return;
+ }
 
-let s={
- name:name.value,
- enroll:enroll.value,
- course:course.value,
- father:father.value,
- mobile:mobile.value,
- records:{}
-};
+ let s={
+  name:name.value,
+  enroll:enroll.value,
+  course:course.value,
+  father:father.value,
+  mobile:mobile.value,
+  records:{}
+ };
 
-students.push(s);
-save();
-alert("Student Added ✅");
-}
+ students.push(s);
+ save();
+
+ alert("Student Added ✅");
+
+ // reset fields
  name.value="";
-enroll.value="";
-course.value="";
-father.value="";
-mobile.value="";
+ enroll.value="";
+ course.value="";
+ father.value="";
+ mobile.value="";
+}
 
 // Save
 function save(){
