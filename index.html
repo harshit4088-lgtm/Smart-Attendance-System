@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Smart Attendance Pro</title>
+<title>Smart Attendance - BCA Department</title>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -32,14 +32,12 @@ th,td{padding:8px}
 </head>
 
 <body>
-<h2 style="text-align:center">Smart Attendance PRO</h2>
+<h2 style="text-align:center">Smart Attendance - BCA Department</h2>
 
 <div class="container">
 
 <div class="card" id="adminPanel">
 <input id="name" placeholder="Name">
-<input id="roll" placeholder="Roll">
-<input id="att" placeholder="Attendance %">
 <input id="enroll" placeholder="Enrollment">
 <input id="course" placeholder="Course">
 <input id="father" placeholder="Father Name">
@@ -52,7 +50,7 @@ th,td{padding:8px}
 
 <div class="card">
 <table>
-<thead><tr><th>Name</th><th>Roll</th><th>Today</th><th>Action</th></tr></thead>
+<thead><tr><th>Name</th><th>Enrollment</th><th>Today</th><th>Action</th></tr></thead>
 <tbody id="data"></tbody>
 </table>
 
@@ -67,7 +65,6 @@ th,td{padding:8px}
 <div id="modal">
 <div class="modal-box">
 <h3 id="mName"></h3>
-<p id="mRoll"></p>
 <p id="mEnroll"></p>
 <p id="mCourse"></p>
 <p id="mFather"></p>
@@ -100,7 +97,6 @@ if(role!=="teacher") document.getElementById("adminPanel").style.display="none";
 function addStudent(){
 let s={
  name:name.value,
- roll:roll.value,
  att:att.value,
  enroll:enroll.value,
  course:course.value,
@@ -130,13 +126,13 @@ let today=new Date().toISOString().split("T")[0];
 list.forEach(s=>{
 let st=s.records?.[today]||"-";
 html+=`<tr>
-<td onclick="openProfile('${s.roll}')">${s.name}</td>
-<td>${s.roll}</td>
+<td onclick="openProfile('${s.enroll}')">${s.name}</td>
+<td>${s.enroll}</td>
 <td>
-<button onclick="mark('${s.roll}','P')">P</button>
-<button onclick="mark('${s.roll}','A')">A</button>
+<button onclick="mark('${s.enroll}','P')">P</button>
+<button onclick="mark('${s.enroll}','A')">A</button>
 <br>${st}</td>
-<td><button onclick="del('${s.roll}')">X</button></td>
+<td><button onclick="del('${s.enroll}')">X</button></td>
 </tr>`;
 });
 data.innerHTML = html;
