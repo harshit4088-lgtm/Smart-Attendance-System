@@ -15,7 +15,7 @@ document.getElementById("addBtn").addEventListener("click", addStudent);
 function addStudent() {
 
 let n = document.getElementById("name").value.trim();
-let r = document.getElementById("roll").value.trim();
+let r = document.getElementById("enrollment").value.trim();
 let a = document.getElementById("att").value.trim();
 
 if (n === "" || r === "" || a === "") {
@@ -25,7 +25,7 @@ return;
 
 students.push({
 name: n,
-roll: r,
+enrollment: r,
 att: parseInt(a)
 });
 
@@ -34,7 +34,7 @@ localStorage.setItem("data", JSON.stringify(students));
 
 // Clear input
 document.getElementById("name").value = "";
-document.getElementById("roll").value = "";
+document.getElementById("enrollment").value = "";
 document.getElementById("att").value = "";
 
 // Refresh table
@@ -50,9 +50,9 @@ students.forEach(s => {
 html += `
 <tr>
 <td>${s.name}</td>
-<td>${s.roll}</td>
+<td>${s.enrollment}</td>
 <td>${s.att}%</td>
-<td><button onclick="del('${s.roll}')">❌</button></td>
+<td><button onclick="del('${s.enrollment}')">❌</button></td>
 </tr>`;
 });
 
@@ -60,8 +60,8 @@ document.getElementById("data").innerHTML = html;
 }
 
 // Delete Student
-function del(roll) {
-students = students.filter(s => s.roll !== roll);
+function del(enrollment) {
+students = students.filter(s => s.enrollment !== enrollment);
 localStorage.setItem("data", JSON.stringify(students));
 render();
 }
