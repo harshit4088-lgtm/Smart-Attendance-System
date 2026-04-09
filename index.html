@@ -1,10 +1,9 @@
-```html
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Smart Attendance - BCA Department</title>
+<title>Smart Attendance Pro</title>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -14,51 +13,89 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
-body{margin:0;font-family:sans-serif;background:#0f172a;color:white}
+body{
+ margin:0;
+ font-family:sans-serif;
+ background:linear-gradient(135deg,#0f172a,#1e3a8a);
+ color:white;
+}
 
+/* HEADER */
+.header{
+ text-align:center;
+ padding:20px;
+ font-size:22px;
+ font-weight:bold;
+ background:linear-gradient(135deg,#6366f1,#0ea5e9);
+ box-shadow:0 5px 20px rgba(0,0,0,0.5);
+ animation:fadeIn 1s;
+}
+
+/* GRID */
 .container{
  display:grid;
  grid-template-columns:300px 1fr;
- gap:10px;
- padding:10px
+ gap:15px;
+ padding:15px;
 }
 
+/* CARD */
 .card{
  background:#1e293b;
- padding:10px;
- border-radius:10px
+ padding:15px;
+ border-radius:12px;
+ box-shadow:0 5px 20px rgba(0,0,0,0.4);
+ animation:fadeInUp 0.8s;
 }
 
-input,button{
+/* INPUT */
+input{
  width:100%;
- padding:8px;
+ padding:10px;
  margin:5px 0;
  border-radius:6px;
- border:none
+ border:none;
 }
 
+/* BUTTON */
 button{
- background:linear-gradient(135deg,#22c55e,#16a34a);
- color:white;
+ width:100%;
+ padding:10px;
+ margin:5px 0;
+ border:none;
+ border-radius:8px;
  font-weight:bold;
+ color:white;
+ cursor:pointer;
+ background:linear-gradient(135deg,#22c55e,#16a34a);
  transition:0.3s;
 }
-button:hover{transform:scale(1.05)}
 
-.header{
- display:flex;
- align-items:center;
- justify-content:center;
- gap:10px;
- padding:15px;
- background:linear-gradient(135deg,#6366f1,#0ea5e9);
- box-shadow:0 4px 15px rgba(0,0,0,0.4);
+button:hover{
+ transform:scale(1.08);
+ background:linear-gradient(135deg,#16a34a,#22c55e);
 }
-.header img{width:45px}
 
-table{width:100%;background:white;color:black}
-th,td{padding:8px;border-bottom:1px solid #ddd}
+/* TABLE */
+table{
+ width:100%;
+ background:white;
+ color:black;
+ border-radius:10px;
+ overflow:hidden;
+}
 
+th{
+ background:#0ea5e9;
+ color:white;
+}
+
+th,td{
+ padding:10px;
+ text-align:center;
+}
+
+/* MODAL */
 #modal{
  display:none;
  position:fixed;
@@ -66,13 +103,26 @@ th,td{padding:8px;border-bottom:1px solid #ddd}
  width:100%;height:100%;
  background:#0008;
  justify-content:center;
- align-items:center
+ align-items:center;
 }
+
 .modal-box{
  background:white;
  color:black;
- padding:15px;
- border-radius:10px
+ padding:20px;
+ border-radius:10px;
+ width:300px;
+}
+
+/* ANIMATION */
+@keyframes fadeIn{
+ from{opacity:0}
+ to{opacity:1}
+}
+
+@keyframes fadeInUp{
+ from{opacity:0;transform:translateY(20px)}
+ to{opacity:1;transform:translateY(0)}
 }
 </style>
 </head>
@@ -80,11 +130,7 @@ th,td{padding:8px;border-bottom:1px solid #ddd}
 <body>
 
 <div class="header">
-  <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png">
-  <div>
-    <h1>Smart Attendance</h1>
-    <p>BCA Department</p>
-  </div>
+ Smart Attendance 🚀
 </div>
 
 <div class="container">
@@ -112,6 +158,7 @@ th,td{padding:8px;border-bottom:1px solid #ddd}
 <th>Name</th>
 <th>Enrollment</th>
 <th>Today</th>
+<th>%</th>
 <th>Action</th>
 </tr>
 </thead>
@@ -124,7 +171,6 @@ th,td{padding:8px;border-bottom:1px solid #ddd}
 <!-- Modal -->
 <div id="modal">
 <div class="modal-box">
-
 <h3>Edit Student</h3>
 
 <input id="editName">
@@ -135,21 +181,17 @@ th,td{padding:8px;border-bottom:1px solid #ddd}
 
 <button onclick="updateStudent()">Update</button>
 <button onclick="closeModal()">Close</button>
-
 </div>
 </div>
 
 <script>
 
-// Firebase config
+// Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDGd7AS81Q53meBWVADmzDXAv_hwZaMMtw",
   authDomain: "attendance-app-f5c57.firebaseapp.com",
   databaseURL: "https://attendance-app-f5c57-default-rtdb.firebaseio.com",
-  projectId: "attendance-app-f5c57",
-  storageBucket: "attendance-app-f5c57.firebasestorage.app",
-  messagingSenderId: "20575897666",
-  appId: "1:20575897666:web:33ccc40e4c88aa67cf05db"
+  projectId: "attendance-app-f5c57"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -157,28 +199,51 @@ const db = firebase.database();
 
 let students=[];
 let currentId="";
+let role="";
+let userEnroll="";
 
-// Role
-let role = localStorage.getItem("role") || prompt("teacher/student");
-localStorage.setItem("role",role);
+// LOGIN
+function loginSystem(){
+
+ let saved = localStorage.getItem("role");
+
+ if(saved){
+  role = saved;
+  userEnroll = localStorage.getItem("enroll");
+  return;
+ }
+
+ role = prompt("teacher/student");
+
+ if(role==="teacher"){
+  let pass = prompt("password?");
+  if(pass!=="admin123"){alert("Wrong ❌");location.reload();}
+  localStorage.setItem("role","teacher");
+
+ }else{
+  let e = prompt("Enter enrollment");
+  localStorage.setItem("role","student");
+  localStorage.setItem("enroll",e);
+  userEnroll = e;
+ }
+}
+
+loginSystem();
 
 if(role!=="teacher"){
  document.getElementById("adminPanel").style.display="none";
 }
 
-// Add
+// ADD
 function addStudent(){
 
- let n = name.value.trim();
- let e = enroll.value.trim();
+ let n=name.value.trim();
+ let e=enroll.value.trim();
 
- if(!n || !e){
-  alert("Fill all fields ❗");
-  return;
- }
+ if(!n||!e){alert("Fill all fields");return;}
 
  if(students.some(s=>s.enroll===e)){
-  alert("Enrollment already exists ❌");
+  alert("Already exists");
   return;
  }
 
@@ -191,10 +256,7 @@ function addStudent(){
   records:{}
  };
 
- students.push(s);
- save();
-
- alert("Student Added ✅");
+ db.ref("students").push(s);
 
  name.value="";
  enroll.value="";
@@ -203,74 +265,88 @@ function addStudent(){
  mobile.value="";
 }
 
-// Save
-function save(){
- db.ref("students").set(students);
-}
-
-// Load
+// LOAD
 db.ref("students").on("value",snap=>{
- students=snap.val()||[];
+ let data=snap.val()||{};
+ students=Object.values(data);
  render();
 });
 
-// Render
+// % calc
+function calc(s){
+ let t=Object.keys(s.records||{}).length;
+ let p=Object.values(s.records||{}).filter(v=>v==="P").length;
+ return t?((p/t)*100).toFixed(1)+"%":"0%";
+}
+
+// RENDER
 function render(list=students){
-let html="";
-let today=new Date().toISOString().split("T")[0];
 
-list.forEach(s=>{
-let st=s.records?.[today]||"-";
-
-html+=`
-<tr>
-<td onclick="openProfile('${s.enroll}')">${s.name}</td>
-<td>${s.enroll}</td>
-<td>
-<button onclick="mark('${s.enroll}','P')">P</button>
-<button onclick="mark('${s.enroll}','A')">A</button>
-<br>${st}
-</td>
-<td>
-<button onclick="del('${s.enroll}')">X</button>
-</td>
-</tr>`;
-});
-
-data.innerHTML = html;
-}
-
-// Mark
-function mark(id,val){
-let today=new Date().toISOString().split("T")[0];
-
-students=students.map(s=>{
- if(s.enroll===id){
-  if(!s.records)s.records={};
-  s.records[today]=val;
+ if(role==="student"){
+  list=list.filter(s=>s.enroll===userEnroll);
  }
- return s;
-});
 
-save();
+ let html="";
+ let today=new Date().toISOString().split("T")[0];
+
+ list.forEach(s=>{
+ let st=s.records?.[today]||"-";
+
+ html+=`
+ <tr>
+ <td onclick="openProfile('${s.enroll}')">${s.name}</td>
+ <td>${s.enroll}</td>
+ <td>
+ <button onclick="mark('${s.enroll}','P')">P</button>
+ <button onclick="mark('${s.enroll}','A')">A</button>
+ <br>${st}
+ </td>
+ <td>${calc(s)}</td>
+ <td><button onclick="del('${s.enroll}')">X</button></td>
+ </tr>`;
+ });
+
+ data.innerHTML=html;
+
+ if(role==="student"){
+  document.querySelectorAll("button").forEach(b=>{
+   if(b.innerText==="P"||b.innerText==="A"||b.innerText==="X"){
+    b.style.display="none";
+   }
+  });
+ }
 }
 
-// Delete
+// MARK
+function mark(id,val){
+ let today=new Date().toISOString().split("T")[0];
+
+ students=students.map(s=>{
+  if(s.enroll===id){
+   s.records=s.records||{};
+   s.records[today]=val;
+  }
+  return s;
+ });
+
+ db.ref("students").set(students);
+}
+
+// DELETE
 function del(id){
-students=students.filter(s=>s.enroll!==id);
-save();
+ students=students.filter(s=>s.enroll!==id);
+ db.ref("students").set(students);
 }
 
-// Search
+// SEARCH
 function searchStudent(){
-let v=search.value.toLowerCase();
-render(students.filter(s=>s.name.toLowerCase().includes(v)||s.enroll.includes(v)));
+ let v=search.value.toLowerCase();
+ render(students.filter(s=>s.name.toLowerCase().includes(v)||s.enroll.includes(v)));
 }
 
-// Open Profile
+// EDIT
 function openProfile(id){
  let s=students.find(x=>x.enroll===id);
-
  currentId=id;
 
  editName.value=s.name;
@@ -279,16 +355,10 @@ function openProfile(id){
  editFather.value=s.father;
  editMobile.value=s.mobile;
 
- if(role!=="teacher"){
-  document.querySelector("button[onclick='updateStudent()']").style.display="none";
- }
-
  modal.style.display="flex";
 }
 
-// Update
 function updateStudent(){
-
  students=students.map(s=>{
   if(s.enroll===currentId){
    s.name=editName.value;
@@ -299,52 +369,42 @@ function updateStudent(){
   return s;
  });
 
- save();
- alert("Updated ✅");
+ db.ref("students").set(students);
  closeModal();
 }
 
-// Close modal
 function closeModal(){
-modal.style.display="none";
+ modal.style.display="none";
 }
 
-// Excel
+// EXCEL
 function downloadExcel(){
-let arr=[];
-students.forEach(s=>{
-Object.entries(s.records||{}).forEach(([d,st])=>{
-arr.push({Name:s.name,Enrollment:s.enroll,Date:d,Status:st});
-});
-});
-let ws=XLSX.utils.json_to_sheet(arr);
-let wb=XLSX.utils.book_new();
-XLSX.utils.book_append_sheet(wb,ws,"data");
-XLSX.writeFile(wb,"attendance.xlsx");
+ let arr=[];
+ students.forEach(s=>{
+  Object.entries(s.records||{}).forEach(([d,st])=>{
+   arr.push({Name:s.name,Enrollment:s.enroll,Date:d,Status:st});
+  });
+ });
+ let ws=XLSX.utils.json_to_sheet(arr);
+ let wb=XLSX.utils.book_new();
+ XLSX.utils.book_append_sheet(wb,ws,"data");
+ XLSX.writeFile(wb,"attendance.xlsx");
 }
 
-// Monthly View
+// MONTHLY
 function showMonthly(){
-
- let html="<h3>📅 Monthly Attendance</h3>";
-
+ let html="<h3>Monthly Attendance</h3>";
  students.forEach(s=>{
-  html+=`<b>${s.name} (${s.enroll})</b><br>`;
-
-  if(s.records){
-   Object.entries(s.records).forEach(([date,status])=>{
-    html+=`${date} : ${status}<br>`;
-   });
+  html+=`<b>${s.name}</b><br>`;
+  for(let d in s.records){
+   html+=`${d} : ${s.records[d]}<br>`;
   }
-
   html+="<hr>";
  });
-
- document.querySelector(".card:last-child").innerHTML = html;
+ document.querySelector(".card:last-child").innerHTML=html;
 }
 
 </script>
 
 </body>
 </html>
-```
