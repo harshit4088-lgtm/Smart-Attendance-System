@@ -169,7 +169,7 @@ if(role!=="teacher") document.getElementById("adminPanel").style.display="none";
 // Add
 function addStudent(){
 
- if(!name.value || !enroll.value){
+ if(!name.value.trim() || !enroll.value.trim(){
   alert("Fill all fields ❗");
   return;
  }
