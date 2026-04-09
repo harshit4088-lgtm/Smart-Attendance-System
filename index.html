@@ -169,22 +169,28 @@ if(role!=="teacher") document.getElementById("adminPanel").style.display="none";
 // Add
 function addStudent(){
 
- if(!name.value.trim() || !enroll.value.trim(){
+ let n = document.getElementById("name").value.trim();
+ let e = document.getElementById("enroll").value.trim();
+ let c = document.getElementById("course").value.trim();
+ let f = document.getElementById("father").value.trim();
+ let m = document.getElementById("mobile").value.trim();
+
+ if(!n || !e){
   alert("Fill all fields ❗");
   return;
  }
 
- if(students.some(s=>s.enroll===enroll.value)){
+ if(students.some(s=>s.enroll===e)){
   alert("Enrollment already exists ❌");
   return;
  }
 
  let s={
-  name:name.value,
-  enroll:enroll.value,
-  course:course.value,
-  father:father.value,
-  mobile:mobile.value,
+  name:n,
+  enroll:e,
+  course:c,
+  father:f,
+  mobile:m,
   records:{}
  };
 
@@ -193,12 +199,12 @@ function addStudent(){
 
  alert("Student Added ✅");
 
- // reset fields
- name.value="";
- enroll.value="";
- course.value="";
- father.value="";
- mobile.value="";
+ // reset
+ document.getElementById("name").value="";
+ document.getElementById("enroll").value="";
+ document.getElementById("course").value="";
+ document.getElementById("father").value="";
+ document.getElementById("mobile").value="";
 }
 
 // Save
