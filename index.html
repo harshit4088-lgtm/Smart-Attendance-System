@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html>
 <head>
@@ -36,7 +37,6 @@ input,button{
  border:none
 }
 
-/* Button */
 button{
  background:linear-gradient(135deg,#22c55e,#16a34a);
  color:white;
@@ -45,7 +45,6 @@ button{
 }
 button:hover{transform:scale(1.05)}
 
-/* Header */
 .header{
  display:flex;
  align-items:center;
@@ -57,11 +56,9 @@ button:hover{transform:scale(1.05)}
 }
 .header img{width:45px}
 
-/* Table */
 table{width:100%;background:white;color:black}
 th,td{padding:8px;border-bottom:1px solid #ddd}
 
-/* Modal */
 #modal{
  display:none;
  position:fixed;
@@ -104,6 +101,7 @@ th,td{padding:8px;border-bottom:1px solid #ddd}
 <hr>
 
 <input id="search" placeholder="Search" onkeyup="searchStudent()">
+<button onclick="showMonthly()">Monthly View</button>
 <button onclick="downloadExcel()">Download Excel</button>
 </div>
 
@@ -126,24 +124,24 @@ th,td{padding:8px;border-bottom:1px solid #ddd}
 <!-- Modal -->
 <div id="modal">
 <div class="modal-box">
-<h3 id="mName"></h3>
-<p id="mEnroll"></p>
-<p id="mCourse"></p>
-<p id="mFather"></p>
-<p id="mMobile"></p>
+
+<h3>Edit Student</h3>
+
+<input id="editName">
+<input id="editEnroll" disabled>
+<input id="editCourse">
+<input id="editFather">
+<input id="editMobile">
+
+<button onclick="updateStudent()">Update</button>
 <button onclick="closeModal()">Close</button>
+
 </div>
 </div>
 
 <script>
 
-// 🔥 Firebase config (अपना डालना)
-// Import the functions you need from the SDKs you need
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyDGd7AS81Q53meBWVADmzDXAv_hwZaMMtw",
   authDomain: "attendance-app-f5c57.firebaseapp.com",
@@ -151,29 +149,28 @@ const firebaseConfig = {
   projectId: "attendance-app-f5c57",
   storageBucket: "attendance-app-f5c57.firebasestorage.app",
   messagingSenderId: "20575897666",
-  appId: "1:20575897666:web:33ccc40e4c88aa67cf05db",
-  measurementId: "G-SJ0JMYLC69"
+  appId: "1:20575897666:web:33ccc40e4c88aa67cf05db"
 };
 
-// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 let students=[];
+let currentId="";
 
 // Role
 let role = localStorage.getItem("role") || prompt("teacher/student");
 localStorage.setItem("role",role);
-if(role!=="teacher") document.getElementById("adminPanel").style.display="none";
+
+if(role!=="teacher"){
+ document.getElementById("adminPanel").style.display="none";
+}
 
 // Add
 function addStudent(){
 
- let n = document.getElementById("name").value.trim();
- let e = document.getElementById("enroll").value.trim();
- let c = document.getElementById("course").value.trim();
- let f = document.getElementById("father").value.trim();
- let m = document.getElementById("mobile").value.trim();
+ let n = name.value.trim();
+ let e = enroll.value.trim();
 
  if(!n || !e){
   alert("Fill all fields ❗");
@@ -188,9 +185,9 @@ function addStudent(){
  let s={
   name:n,
   enroll:e,
-  course:c,
-  father:f,
-  mobile:m,
+  course:course.value,
+  father:father.value,
+  mobile:mobile.value,
   records:{}
  };
 
@@ -199,12 +196,11 @@ function addStudent(){
 
  alert("Student Added ✅");
 
- // reset
- document.getElementById("name").value="";
- document.getElementById("enroll").value="";
- document.getElementById("course").value="";
- document.getElementById("father").value="";
- document.getElementById("mobile").value="";
+ name.value="";
+ enroll.value="";
+ course.value="";
+ father.value="";
+ mobile.value="";
 }
 
 // Save
@@ -212,7 +208,7 @@ function save(){
  db.ref("students").set(students);
 }
 
-// Live load
+// Load
 db.ref("students").on("value",snap=>{
  students=snap.val()||[];
  render();
@@ -271,19 +267,44 @@ let v=search.value.toLowerCase();
 render(students.filter(s=>s.name.toLowerCase().includes(v)||s.enroll.includes(v)));
 }
 
-// Profile
+// Open Profile
 function openProfile(id){
-let s=students.find(x=>x.enroll===id);
+ let s=students.find(x=>x.enroll===id);
 
-mName.innerText=s.name;
-mEnroll.innerText="Enrollment: "+s.enroll;
-mCourse.innerText="Course: "+s.course;
-mFather.innerText="Father: "+s.father;
-mMobile.innerText="Mobile: "+s.mobile;
+ currentId=id;
 
-modal.style.display="flex";
+ editName.value=s.name;
+ editEnroll.value=s.enroll;
+ editCourse.value=s.course;
+ editFather.value=s.father;
+ editMobile.value=s.mobile;
+
+ if(role!=="teacher"){
+  document.querySelector("button[onclick='updateStudent()']").style.display="none";
+ }
+
+ modal.style.display="flex";
 }
 
+// Update
+function updateStudent(){
+
+ students=students.map(s=>{
+  if(s.enroll===currentId){
+   s.name=editName.value;
+   s.course=editCourse.value;
+   s.father=editFather.value;
+   s.mobile=editMobile.value;
+  }
+  return s;
+ });
+
+ save();
+ alert("Updated ✅");
+ closeModal();
+}
+
+// Close modal
 function closeModal(){
 modal.style.display="none";
 }
@@ -302,7 +323,28 @@ XLSX.utils.book_append_sheet(wb,ws,"data");
 XLSX.writeFile(wb,"attendance.xlsx");
 }
 
+// Monthly View
+function showMonthly(){
+
+ let html="<h3>📅 Monthly Attendance</h3>";
+
+ students.forEach(s=>{
+  html+=`<b>${s.name} (${s.enroll})</b><br>`;
+
+  if(s.records){
+   Object.entries(s.records).forEach(([date,status])=>{
+    html+=`${date} : ${status}<br>`;
+   });
+  }
+
+  html+="<hr>";
+ });
+
+ document.querySelector(".card:last-child").innerHTML = html;
+}
+
 </script>
 
 </body>
 </html>
+```
