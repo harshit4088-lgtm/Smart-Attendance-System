@@ -5,12 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Smart Attendance Pro</title>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-
-<!-- XLSX -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
 body{
@@ -19,83 +15,43 @@ body{
  background:linear-gradient(135deg,#0f172a,#1e3a8a);
  color:white;
 }
-
-/* HEADER */
 .header{
  text-align:center;
  padding:20px;
- font-size:22px;
- font-weight:bold;
  background:linear-gradient(135deg,#6366f1,#0ea5e9);
- box-shadow:0 5px 20px rgba(0,0,0,0.5);
- animation:fadeIn 1s;
 }
-
-/* GRID */
 .container{
  display:grid;
  grid-template-columns:300px 1fr;
  gap:15px;
  padding:15px;
 }
-
-/* CARD */
 .card{
  background:#1e293b;
  padding:15px;
  border-radius:12px;
- box-shadow:0 5px 20px rgba(0,0,0,0.4);
- animation:fadeInUp 0.8s;
 }
-
-/* INPUT */
-input{
+input,button{
  width:100%;
  padding:10px;
  margin:5px 0;
+ border:none;
  border-radius:6px;
- border:none;
 }
-
-/* BUTTON */
 button{
- width:100%;
- padding:10px;
- margin:5px 0;
- border:none;
- border-radius:8px;
- font-weight:bold;
+ background:#22c55e;
  color:white;
  cursor:pointer;
- background:linear-gradient(135deg,#22c55e,#16a34a);
- transition:0.3s;
 }
-
-button:hover{
- transform:scale(1.08);
- background:linear-gradient(135deg,#16a34a,#22c55e);
-}
-
-/* TABLE */
 table{
  width:100%;
  background:white;
  color:black;
- border-radius:10px;
- overflow:hidden;
 }
-
-th{
- background:#0ea5e9;
- color:white;
-}
-
 th,td{
- padding:10px;
+ padding:8px;
  text-align:center;
 }
-
-/* MODAL */
 #modal{
  display:none;
  position:fixed;
@@ -105,24 +61,11 @@ th,td{
  justify-content:center;
  align-items:center;
 }
-
 .modal-box{
  background:white;
  color:black;
  padding:20px;
  border-radius:10px;
- width:300px;
-}
-
-/* ANIMATION */
-@keyframes fadeIn{
- from{opacity:0}
- to{opacity:1}
-}
-
-@keyframes fadeInUp{
- from{opacity:0;transform:translateY(20px)}
- to{opacity:1;transform:translateY(0)}
 }
 </style>
 </head>
@@ -130,7 +73,7 @@ th,td{
 <body>
 
 <div class="header">
- Smart Attendance 🚀
+<h2>Smart Attendance</h2>
 </div>
 
 <div class="container">
@@ -147,8 +90,6 @@ th,td{
 <hr>
 
 <input id="search" placeholder="Search" onkeyup="searchStudent()">
-<button onclick="showMonthly()">Monthly View</button>
-<button onclick="downloadExcel()">Download Excel</button>
 </div>
 
 <div class="card">
@@ -168,7 +109,6 @@ th,td{
 
 </div>
 
-<!-- Modal -->
 <div id="modal">
 <div class="modal-box">
 <h3>Edit Student</h3>
@@ -186,12 +126,12 @@ th,td{
 
 <script>
 
-// Firebase
+// 🔥 Firebase config
 const firebaseConfig = {
-  apiKey: "AIzaSyDGd7AS81Q53meBWVADmzDXAv_hwZaMMtw",
-  authDomain: "attendance-app-f5c57.firebaseapp.com",
-  databaseURL: "https://attendance-app-f5c57-default-rtdb.firebaseio.com",
-  projectId: "attendance-app-f5c57"
+ apiKey: "AIzaSyDGd7AS81Q53meBWVADmzDXAv_hwZaMMtw",
+ authDomain: "attendance-app-f5c57.firebaseapp.com",
+ databaseURL: "https://attendance-app-f5c57-default-rtdb.firebaseio.com",
+ projectId: "attendance-app-f5c57"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -202,39 +142,37 @@ let currentId="";
 let role="";
 let userEnroll="";
 
-// LOGIN
+// 🔐 Login
 function loginSystem(){
-
- let saved = localStorage.getItem("role");
+ let saved=localStorage.getItem("role");
 
  if(saved){
-  role = saved;
-  userEnroll = localStorage.getItem("enroll");
+  role=saved;
+  userEnroll=localStorage.getItem("enroll");
   return;
  }
 
- role = prompt("teacher/student");
+ role=prompt("teacher/student");
 
  if(role==="teacher"){
-  let pass = prompt("password?");
-  if(pass!=="admin123"){alert("Wrong ❌");location.reload();}
+  let pass=prompt("password");
+  if(pass!=="admin123"){alert("Wrong");location.reload();}
   localStorage.setItem("role","teacher");
 
  }else{
-  let e = prompt("Enter enrollment");
+  let e=prompt("Enrollment");
   localStorage.setItem("role","student");
   localStorage.setItem("enroll",e);
-  userEnroll = e;
+  userEnroll=e;
  }
 }
-
 loginSystem();
 
 if(role!=="teacher"){
  document.getElementById("adminPanel").style.display="none";
 }
 
-// ADD
+// ➕ Add
 function addStudent(){
 
  let n=name.value.trim();
@@ -265,21 +203,26 @@ function addStudent(){
  mobile.value="";
 }
 
-// LOAD
+// 🔄 Load (FIXED)
 db.ref("students").on("value",snap=>{
  let data=snap.val()||{};
- students=Object.values(data);
+
+ students=Object.entries(data).map(([key,val])=>({
+  ...val,
+  id:key
+ }));
+
  render();
 });
 
-// % calc
+// 📊 %
 function calc(s){
  let t=Object.keys(s.records||{}).length;
  let p=Object.values(s.records||{}).filter(v=>v==="P").length;
  return t?((p/t)*100).toFixed(1)+"%":"0%";
 }
 
-// RENDER
+// 🖥️ Render
 function render(list=students){
 
  if(role==="student"){
@@ -310,41 +253,40 @@ function render(list=students){
 
  if(role==="student"){
   document.querySelectorAll("button").forEach(b=>{
-   if(b.innerText==="P"||b.innerText==="A"||b.innerText==="X"){
+   if(["P","A","X"].includes(b.innerText)){
     b.style.display="none";
    }
   });
  }
 }
 
-// MARK
+// 🟢 Mark (FIXED)
 function mark(id,val){
  let today=new Date().toISOString().split("T")[0];
 
- students=students.map(s=>{
-  if(s.enroll===id){
-   s.records=s.records||{};
-   s.records[today]=val;
-  }
-  return s;
+ let s=students.find(x=>x.enroll===id);
+
+ s.records=s.records||{};
+ s.records[today]=val;
+
+ db.ref("students/"+s.id).update({
+  records:s.records
  });
-
- db.ref("students").set(students);
 }
 
-// DELETE
+// ❌ Delete (FIXED)
 function del(id){
- students=students.filter(s=>s.enroll!==id);
- db.ref("students").set(students);
+ let s=students.find(x=>x.enroll===id);
+ db.ref("students/"+s.id).remove();
 }
 
-// SEARCH
+// 🔍 Search
 function searchStudent(){
  let v=search.value.toLowerCase();
  render(students.filter(s=>s.name.toLowerCase().includes(v)||s.enroll.includes(v)));
 }
 
-// EDIT
+// ✏️ Edit
 function openProfile(id){
  let s=students.find(x=>x.enroll===id);
  currentId=id;
@@ -358,50 +300,23 @@ function openProfile(id){
  modal.style.display="flex";
 }
 
+// 🔄 Update (FIXED)
 function updateStudent(){
- students=students.map(s=>{
-  if(s.enroll===currentId){
-   s.name=editName.value;
-   s.course=editCourse.value;
-   s.father=editFather.value;
-   s.mobile=editMobile.value;
-  }
-  return s;
+ let s=students.find(x=>x.enroll===currentId);
+
+ db.ref("students/"+s.id).update({
+  name:editName.value,
+  course:editCourse.value,
+  father:editFather.value,
+  mobile:editMobile.value
  });
 
- db.ref("students").set(students);
  closeModal();
 }
 
+// Close
 function closeModal(){
  modal.style.display="none";
-}
-
-// EXCEL
-function downloadExcel(){
- let arr=[];
- students.forEach(s=>{
-  Object.entries(s.records||{}).forEach(([d,st])=>{
-   arr.push({Name:s.name,Enrollment:s.enroll,Date:d,Status:st});
-  });
- });
- let ws=XLSX.utils.json_to_sheet(arr);
- let wb=XLSX.utils.book_new();
- XLSX.utils.book_append_sheet(wb,ws,"data");
- XLSX.writeFile(wb,"attendance.xlsx");
-}
-
-// MONTHLY
-function showMonthly(){
- let html="<h3>Monthly Attendance</h3>";
- students.forEach(s=>{
-  html+=`<b>${s.name}</b><br>`;
-  for(let d in s.records){
-   html+=`${d} : ${s.records[d]}<br>`;
-  }
-  html+="<hr>";
- });
- document.querySelector(".card:last-child").innerHTML=html;
 }
 
 </script>
