@@ -1,132 +1,8 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Smart Attendance Pro</title>
-
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-
-<style>
-body{
- margin:0;
- font-family:sans-serif;
- background:linear-gradient(135deg,#0f172a,#1e3a8a);
- color:white;
-}
-
-.header{
- text-align:center;
- padding:20px;
- font-size:22px;
- font-weight:bold;
- background:linear-gradient(135deg,#6366f1,#0ea5e9);
-}
-
-.container{
- display:grid;
- grid-template-columns:300px 1fr;
- gap:15px;
- padding:15px;
-}
-
-.card{
- background:#1e293b;
- padding:15px;
- border-radius:12px;
-}
-
-input,button{
- width:100%;
- padding:10px;
- margin:5px 0;
- border-radius:6px;
- border:none;
-}
-
-button{
- background:linear-gradient(135deg,#22c55e,#16a34a);
- color:white;
- cursor:pointer;
-}
-
-table{
- width:100%;
- background:white;
- color:black;
-}
-
-th,td{
- padding:10px;
- text-align:center;
-}
-
-#modal{
- display:none;
- position:fixed;
- top:0;left:0;
- width:100%;height:100%;
- background:#0008;
- justify-content:center;
- align-items:center;
-}
-
-.modal-box{
- background:white;
- color:black;
- padding:20px;
- border-radius:10px;
-}
-</style>
-</head>
-
-<body>
-
-<div class="header">Smart Attendance 🚀</div>
-
-<div class="container">
-
-<div class="card" id="adminPanel">
-<input id="name" placeholder="Name">
-<input id="enroll" placeholder="Enrollment">
-
-<button onclick="addStudent()">Add Student</button>
-</div>
-
-<div class="card">
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Enroll</th>
-<th>Today</th>
-<th>%</th>
-<th>Action</th>
-</tr>
-</thead>
-<tbody id="data"></tbody>
-</table>
-</div>
-
-</div>
-
-<!-- Modal -->
-<div id="modal">
-<div class="modal-box">
-<input id="editName">
-<input id="editEnroll" disabled>
-
-<button onclick="updateStudent()">Update</button>
-<button onclick="closeModal()">Close</button>
-</div>
-</div>
-
 <script>
 
-// 🔥 Firebase
+// 🔥 Firebase (अपना original key डालना)
 const firebaseConfig = {
- apiKey: "AIzaSy...",
+ apiKey: "YOUR_REAL_API_KEY",
  authDomain: "attendance-app-f5c57.firebaseapp.com",
  databaseURL: "https://attendance-app-f5c57-default-rtdb.firebaseio.com",
  projectId: "attendance-app-f5c57"
@@ -138,13 +14,13 @@ const db = firebase.database();
 let students = {};
 let currentId = "";
 
-// 🔹 LOAD DATA
+// 🔹 LOAD
 db.ref("students").on("value", snap=>{
  students = snap.val() || {};
  render();
 });
 
-// 🔹 ADD STUDENT (FIXED)
+// 🔹 ADD (FIXED)
 function addStudent(){
 
  let n = document.getElementById("name").value.trim();
@@ -155,9 +31,7 @@ function addStudent(){
   return;
  }
 
- let id = db.ref("students").push().key;
-
- db.ref("students/"+id).set({
+ db.ref("students").push({
   name:n,
   enroll:e,
   records:{}
@@ -167,7 +41,7 @@ function addStudent(){
  document.getElementById("enroll").value="";
 }
 
-// 🔹 RENDER (FIXED)
+// 🔹 RENDER
 function render(){
 
  let html="";
@@ -194,7 +68,7 @@ function render(){
  document.getElementById("data").innerHTML = html;
 }
 
-// 🔹 % CALC
+// 🔹 %
 function calc(s){
  let t = Object.keys(s.records||{}).length;
  let p = Object.values(s.records||{}).filter(v=>v==="P").length;
@@ -206,14 +80,10 @@ function mark(id,val){
 
  let today = new Date().toISOString().split("T")[0];
 
- let s = students[id];
- s.records = s.records || {};
- s.records[today] = val;
-
- db.ref("students/"+id).update(s);
+ db.ref("students/"+id+"/records/"+today).set(val);
 }
 
-// 🔹 DELETE (FIXED)
+// 🔹 DELETE
 function del(id){
  db.ref("students/"+id).remove();
 }
@@ -224,28 +94,26 @@ function openProfile(id){
 
  let s = students[id];
 
- editName.value = s.name;
- editEnroll.value = s.enroll;
+ document.getElementById("editName").value = s.name;
+ document.getElementById("editEnroll").value = s.enroll;
 
- modal.style.display="flex";
+ document.getElementById("modal").style.display="flex";
 }
 
+// 🔹 UPDATE (FIXED)
 function updateStudent(){
 
- let s = students[currentId];
+ let newName = document.getElementById("editName").value;
 
- s.name = editName.value;
-
- db.ref("students/"+currentId).update(s);
+ db.ref("students/"+currentId).update({
+  name:newName
+ });
 
  closeModal();
 }
 
 function closeModal(){
- modal.style.display="none";
+ document.getElementById("modal").style.display="none";
 }
 
 </script>
-
-</body>
-</html>
