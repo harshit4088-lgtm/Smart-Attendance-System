@@ -15,43 +15,53 @@ body{
  background:linear-gradient(135deg,#0f172a,#1e3a8a);
  color:white;
 }
+
 .header{
  text-align:center;
  padding:20px;
+ font-size:22px;
+ font-weight:bold;
  background:linear-gradient(135deg,#6366f1,#0ea5e9);
 }
+
 .container{
  display:grid;
  grid-template-columns:300px 1fr;
  gap:15px;
  padding:15px;
 }
+
 .card{
  background:#1e293b;
  padding:15px;
  border-radius:12px;
 }
+
 input,button{
  width:100%;
  padding:10px;
  margin:5px 0;
- border:none;
  border-radius:6px;
+ border:none;
 }
+
 button{
- background:#22c55e;
+ background:linear-gradient(135deg,#22c55e,#16a34a);
  color:white;
  cursor:pointer;
 }
+
 table{
  width:100%;
  background:white;
  color:black;
 }
+
 th,td{
- padding:8px;
+ padding:10px;
  text-align:center;
 }
+
 #modal{
  display:none;
  position:fixed;
@@ -61,6 +71,7 @@ th,td{
  justify-content:center;
  align-items:center;
 }
+
 .modal-box{
  background:white;
  color:black;
@@ -72,24 +83,15 @@ th,td{
 
 <body>
 
-<div class="header">
-<h2>Smart Attendance</h2>
-</div>
+<div class="header">Smart Attendance 🚀</div>
 
 <div class="container">
 
 <div class="card" id="adminPanel">
 <input id="name" placeholder="Name">
 <input id="enroll" placeholder="Enrollment">
-<input id="course" placeholder="Course">
-<input id="father" placeholder="Father Name">
-<input id="mobile" placeholder="Mobile">
 
 <button onclick="addStudent()">Add Student</button>
-
-<hr>
-
-<input id="search" placeholder="Search" onkeyup="searchStudent()">
 </div>
 
 <div class="card">
@@ -97,7 +99,7 @@ th,td{
 <thead>
 <tr>
 <th>Name</th>
-<th>Enrollment</th>
+<th>Enroll</th>
 <th>Today</th>
 <th>%</th>
 <th>Action</th>
@@ -109,15 +111,11 @@ th,td{
 
 </div>
 
+<!-- Modal -->
 <div id="modal">
 <div class="modal-box">
-<h3>Edit Student</h3>
-
 <input id="editName">
 <input id="editEnroll" disabled>
-<input id="editCourse">
-<input id="editFather">
-<input id="editMobile">
 
 <button onclick="updateStudent()">Update</button>
 <button onclick="closeModal()">Close</button>
@@ -126,9 +124,9 @@ th,td{
 
 <script>
 
-// 🔥 Firebase config
+// 🔥 Firebase
 const firebaseConfig = {
- apiKey: "AIzaSyDGd7AS81Q53meBWVADmzDXAv_hwZaMMtw",
+ apiKey: "AIzaSy...",
  authDomain: "attendance-app-f5c57.firebaseapp.com",
  databaseURL: "https://attendance-app-f5c57-default-rtdb.firebaseio.com",
  projectId: "attendance-app-f5c57"
@@ -137,184 +135,112 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-let students=[];
-let currentId="";
-let role="";
-let userEnroll="";
+let students = {};
+let currentId = "";
 
-// 🔐 Login
-function loginSystem(){
- let saved=localStorage.getItem("role");
-
- if(saved){
-  role=saved;
-  userEnroll=localStorage.getItem("enroll");
-  return;
- }
-
- role=prompt("teacher/student");
-
- if(role==="teacher"){
-  let pass=prompt("password");
-  if(pass!=="admin123"){alert("Wrong");location.reload();}
-  localStorage.setItem("role","teacher");
-
- }else{
-  let e=prompt("Enrollment");
-  localStorage.setItem("role","student");
-  localStorage.setItem("enroll",e);
-  userEnroll=e;
- }
-}
-loginSystem();
-
-if(role!=="teacher"){
- document.getElementById("adminPanel").style.display="none";
-}
-
-// ➕ Add
-function addStudent(){
-
- let n=name.value.trim();
- let e=enroll.value.trim();
-
- if(!n||!e){alert("Fill all fields");return;}
-
- if(students.some(s=>s.enroll===e)){
-  alert("Already exists");
-  return;
- }
-
- let s={
-  name:n,
-  enroll:e,
-  course:course.value,
-  father:father.value,
-  mobile:mobile.value,
-  records:{}
- };
-
- db.ref("students").push(s);
-
- name.value="";
- enroll.value="";
- course.value="";
- father.value="";
- mobile.value="";
-}
-
-// 🔄 Load (FIXED)
-db.ref("students").on("value",snap=>{
- let data=snap.val()||{};
-
- students=Object.entries(data).map(([key,val])=>({
-  ...val,
-  id:key
- }));
-
+// 🔹 LOAD DATA
+db.ref("students").on("value", snap=>{
+ students = snap.val() || {};
  render();
 });
 
-// 📊 %
-function calc(s){
- let t=Object.keys(s.records||{}).length;
- let p=Object.values(s.records||{}).filter(v=>v==="P").length;
- return t?((p/t)*100).toFixed(1)+"%":"0%";
-}
+// 🔹 ADD STUDENT (FIXED)
+function addStudent(){
 
-// 🖥️ Render
-function render(list=students){
+ let n = document.getElementById("name").value.trim();
+ let e = document.getElementById("enroll").value.trim();
 
- if(role==="student"){
-  list=list.filter(s=>s.enroll===userEnroll);
+ if(!n || !e){
+  alert("Fill fields");
+  return;
  }
 
+ let id = db.ref("students").push().key;
+
+ db.ref("students/"+id).set({
+  name:n,
+  enroll:e,
+  records:{}
+ });
+
+ document.getElementById("name").value="";
+ document.getElementById("enroll").value="";
+}
+
+// 🔹 RENDER (FIXED)
+function render(){
+
  let html="";
- let today=new Date().toISOString().split("T")[0];
+ let today = new Date().toISOString().split("T")[0];
 
- list.forEach(s=>{
- let st=s.records?.[today]||"-";
+ Object.entries(students).forEach(([id,s])=>{
 
- html+=`
+ let st = s.records?.[today] || "-";
+
+ html += `
  <tr>
- <td onclick="openProfile('${s.enroll}')">${s.name}</td>
+ <td onclick="openProfile('${id}')">${s.name}</td>
  <td>${s.enroll}</td>
  <td>
- <button onclick="mark('${s.enroll}','P')">P</button>
- <button onclick="mark('${s.enroll}','A')">A</button>
+ <button onclick="mark('${id}','P')">P</button>
+ <button onclick="mark('${id}','A')">A</button>
  <br>${st}
  </td>
  <td>${calc(s)}</td>
- <td><button onclick="del('${s.enroll}')">X</button></td>
+ <td><button onclick="del('${id}')">X</button></td>
  </tr>`;
  });
 
- data.innerHTML=html;
-
- if(role==="student"){
-  document.querySelectorAll("button").forEach(b=>{
-   if(["P","A","X"].includes(b.innerText)){
-    b.style.display="none";
-   }
-  });
- }
+ document.getElementById("data").innerHTML = html;
 }
 
-// 🟢 Mark (FIXED)
+// 🔹 % CALC
+function calc(s){
+ let t = Object.keys(s.records||{}).length;
+ let p = Object.values(s.records||{}).filter(v=>v==="P").length;
+ return t ? ((p/t)*100).toFixed(1)+"%" : "0%";
+}
+
+// 🔹 MARK (FIXED)
 function mark(id,val){
- let today=new Date().toISOString().split("T")[0];
 
- let s=students.find(x=>x.enroll===id);
+ let today = new Date().toISOString().split("T")[0];
 
- s.records=s.records||{};
- s.records[today]=val;
+ let s = students[id];
+ s.records = s.records || {};
+ s.records[today] = val;
 
- db.ref("students/"+s.id).update({
-  records:s.records
- });
+ db.ref("students/"+id).update(s);
 }
 
-// ❌ Delete (FIXED)
+// 🔹 DELETE (FIXED)
 function del(id){
- let s=students.find(x=>x.enroll===id);
- db.ref("students/"+s.id).remove();
+ db.ref("students/"+id).remove();
 }
 
-// 🔍 Search
-function searchStudent(){
- let v=search.value.toLowerCase();
- render(students.filter(s=>s.name.toLowerCase().includes(v)||s.enroll.includes(v)));
-}
-
-// ✏️ Edit
+// 🔹 EDIT
 function openProfile(id){
- let s=students.find(x=>x.enroll===id);
- currentId=id;
+ currentId = id;
 
- editName.value=s.name;
- editEnroll.value=s.enroll;
- editCourse.value=s.course;
- editFather.value=s.father;
- editMobile.value=s.mobile;
+ let s = students[id];
+
+ editName.value = s.name;
+ editEnroll.value = s.enroll;
 
  modal.style.display="flex";
 }
 
-// 🔄 Update (FIXED)
 function updateStudent(){
- let s=students.find(x=>x.enroll===currentId);
 
- db.ref("students/"+s.id).update({
-  name:editName.value,
-  course:editCourse.value,
-  father:editFather.value,
-  mobile:editMobile.value
- });
+ let s = students[currentId];
+
+ s.name = editName.value;
+
+ db.ref("students/"+currentId).update(s);
 
  closeModal();
 }
 
-// Close
 function closeModal(){
  modal.style.display="none";
 }
