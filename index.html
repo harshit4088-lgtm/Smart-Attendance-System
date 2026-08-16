@@ -1,119 +1,860 @@
-<script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
 
-// 🔥 Firebase (अपना original key डालना)
-const firebaseConfig = {
- apiKey: "YOUR_REAL_API_KEY",
- authDomain: "attendance-app-f5c57.firebaseapp.com",
- databaseURL: "https://attendance-app-f5c57-default-rtdb.firebaseio.com",
- projectId: "attendance-app-f5c57"
-};
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+  <meta name="theme-color" content="#6366f1">
 
-let students = {};
-let currentId = "";
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
 
-// 🔹 LOAD
-db.ref("students").on("value", snap=>{
- students = snap.val() || {};
- render();
-});
+  <title>Attendance System</title>
+</head>
 
-// 🔹 ADD (FIXED)
-function addStudent(){
+<body>
 
- let n = document.getElementById("name").value.trim();
- let e = document.getElementById("enroll").value.trim();
+  <header class="topbar">
+    <div>
+      <h1>📚 Attendance System</h1>
+      <p>Student attendance management</p>
+    </div>
 
- if(!n || !e){
-  alert("Fill fields");
-  return;
- }
+    <button id="installBtn" class="install-btn" style="display:none;">
+      📲 Install App
+    </button>
+  </header>
 
- db.ref("students").push({
-  name:n,
-  enroll:e,
-  records:{}
- });
 
- document.getElementById("name").value="";
- document.getElementById("enroll").value="";
-}
+  <main class="main-layout">
 
-// 🔹 RENDER
-function render(){
+    <!-- SIDEBAR -->
+    <section class="sidebar">
 
- let html="";
- let today = new Date().toISOString().split("T")[0];
+      <h2>Add Student</h2>
 
- Object.entries(students).forEach(([id,s])=>{
+      <label for="name">Student Name</label>
+      <input
+        type="text"
+        id="name"
+        placeholder="Enter student name"
+      >
 
- let st = s.records?.[today] || "-";
+      <label for="enroll">Enrollment Number</label>
+      <input
+        type="text"
+        id="enroll"
+        placeholder="Enter enrollment number"
+      >
 
- html += `
- <tr>
- <td onclick="openProfile('${id}')">${s.name}</td>
- <td>${s.enroll}</td>
- <td>
- <button onclick="mark('${id}','P')">P</button>
- <button onclick="mark('${id}','A')">A</button>
- <br>${st}
- </td>
- <td>${calc(s)}</td>
- <td><button onclick="del('${id}')">X</button></td>
- </tr>`;
- });
+      <button class="add-btn" onclick="addStudent()">
+        ➕ Add Student
+      </button>
 
- document.getElementById("data").innerHTML = html;
-}
+      <div class="info-box">
+        <strong>How to use</strong>
+        <p>Add a student and then use P or A to mark attendance.</p>
+      </div>
 
-// 🔹 %
-function calc(s){
- let t = Object.keys(s.records||{}).length;
- let p = Object.values(s.records||{}).filter(v=>v==="P").length;
- return t ? ((p/t)*100).toFixed(1)+"%" : "0%";
-}
+    </section>
 
-// 🔹 MARK (FIXED)
-function mark(id,val){
 
- let today = new Date().toISOString().split("T")[0];
+    <!-- CONTENT -->
+    <section class="content">
 
- db.ref("students/"+id+"/records/"+today).set(val);
-}
+      <div class="content-header">
+        <div>
+          <h2>Students</h2>
+          <p id="today"></p>
+        </div>
 
-// 🔹 DELETE
-function del(id){
- db.ref("students/"+id).remove();
-}
+        <div class="student-count">
+          Students: <strong id="studentCount">0</strong>
+        </div>
+      </div>
 
-// 🔹 EDIT
-function openProfile(id){
- currentId = id;
 
- let s = students[id];
+      <div class="table-container">
 
- document.getElementById("editName").value = s.name;
- document.getElementById("editEnroll").value = s.enroll;
+        <table>
 
- document.getElementById("modal").style.display="flex";
-}
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Enrollment</th>
+              <th>Today</th>
+              <th>Attendance</th>
+              <th>Action</th>
+            </tr>
+          </thead>
 
-// 🔹 UPDATE (FIXED)
-function updateStudent(){
+          <tbody id="data">
+            <tr>
+              <td colspan="5" class="loading">
+                Loading students...
+              </td>
+            </tr>
+          </tbody>
 
- let newName = document.getElementById("editName").value;
+        </table>
 
- db.ref("students/"+currentId).update({
-  name:newName
- });
+      </div>
 
- closeModal();
-}
+    </section>
 
-function closeModal(){
- document.getElementById("modal").style.display="none";
-}
+  </main>
 
-</script>
+
+  <!-- EDIT MODAL -->
+
+  <div id="modal" class="modal">
+
+    <div class="modal-box">
+
+      <button class="close-btn" onclick="closeModal()">
+        ×
+      </button>
+
+      <h2>Student Profile</h2>
+
+      <label for="editName">Student Name</label>
+
+      <input
+        type="text"
+        id="editName"
+        placeholder="Student name"
+      >
+
+      <label for="editEnroll">Enrollment Number</label>
+
+      <input
+        type="text"
+        id="editEnroll"
+        placeholder="Enrollment number"
+      >
+
+      <button class="save-btn" onclick="updateStudent()">
+        💾 Save Changes
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- Firebase -->
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+
+  <script>
+
+    // ==========================================
+    // FIREBASE CONFIGURATION
+    // ==========================================
+
+    const firebaseConfig = {
+
+      apiKey: "YOUR_REAL_API_KEY",
+
+      authDomain:
+        "attendance-app-f5c57.firebaseapp.com",
+
+      databaseURL:
+        "https://attendance-app-f5c57-default-rtdb.firebaseio.com",
+
+      projectId:
+        "attendance-app-f5c57"
+
+    };
+
+
+    // Initialize Firebase
+
+    firebase.initializeApp(firebaseConfig);
+
+    const db = firebase.database();
+
+
+    // ==========================================
+    // VARIABLES
+    // ==========================================
+
+    let students = {};
+
+    let currentId = "";
+
+
+    // ==========================================
+    // TODAY
+    // ==========================================
+
+    function getToday() {
+
+      const now = new Date();
+
+      const year = now.getFullYear();
+
+      const month =
+        String(now.getMonth() + 1).padStart(2, "0");
+
+      const day =
+        String(now.getDate()).padStart(2, "0");
+
+      return `${year}-${month}-${day}`;
+    }
+
+
+    function formatDate() {
+
+      const now = new Date();
+
+      return now.toLocaleDateString(
+        "en-IN",
+        {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric"
+        }
+      );
+
+    }
+
+
+    document.getElementById("today").textContent =
+      formatDate();
+
+
+    // ==========================================
+    // LOAD STUDENTS
+    // ==========================================
+
+    db.ref("students").on(
+      "value",
+      function(snapshot) {
+
+        students = snapshot.val() || {};
+
+        render();
+
+      },
+      function(error) {
+
+        console.error(error);
+
+        document.getElementById("data").innerHTML = `
+          <tr>
+            <td colspan="5" class="error">
+              ❌ Unable to load Firebase data.
+              <br>
+              Check your Firebase configuration and database rules.
+            </td>
+          </tr>
+        `;
+
+      }
+    );
+
+
+    // ==========================================
+    // ADD STUDENT
+    // ==========================================
+
+    function addStudent() {
+
+      const name =
+        document.getElementById("name").value.trim();
+
+      const enroll =
+        document.getElementById("enroll").value.trim();
+
+
+      if (!name || !enroll) {
+
+        alert("Please fill in both fields.");
+
+        return;
+
+      }
+
+
+      // Check duplicate enrollment
+
+      const duplicate =
+        Object.values(students).some(
+          student =>
+            student.enroll &&
+            student.enroll.toLowerCase() ===
+            enroll.toLowerCase()
+        );
+
+
+      if (duplicate) {
+
+        alert("A student with this enrollment number already exists.");
+
+        return;
+
+      }
+
+
+      db.ref("students").push({
+
+        name: name,
+
+        enroll: enroll,
+
+        records: {}
+
+      })
+      .then(function() {
+
+        document.getElementById("name").value = "";
+
+        document.getElementById("enroll").value = "";
+
+      })
+      .catch(function(error) {
+
+        console.error(error);
+
+        alert(
+          "Could not add student: " +
+          error.message
+        );
+
+      });
+
+    }
+
+
+    // ==========================================
+    // RENDER TABLE
+    // ==========================================
+
+    function render() {
+
+      let html = "";
+
+      const today = getToday();
+
+      const studentList =
+        Object.entries(students);
+
+
+      document.getElementById("studentCount").textContent =
+        studentList.length;
+
+
+      if (studentList.length === 0) {
+
+        document.getElementById("data").innerHTML = `
+          <tr>
+            <td colspan="5" class="empty">
+              👨‍🎓 No students added yet.
+              <br>
+              Add your first student from the left panel.
+            </td>
+          </tr>
+        `;
+
+        return;
+
+      }
+
+
+      studentList.forEach(
+        ([id, student]) => {
+
+          const records =
+            student.records || {};
+
+
+          const todayStatus =
+            records[today] || "-";
+
+
+          let statusClass = "not-marked";
+
+          if (todayStatus === "P") {
+
+            statusClass = "present";
+
+          }
+
+          if (todayStatus === "A") {
+
+            statusClass = "absent";
+
+          }
+
+
+          html += `
+
+            <tr>
+
+              <td>
+
+                <button
+                  class="name-btn"
+                  onclick="openProfile('${id}')"
+                >
+                  ${escapeHTML(student.name || "Unnamed")}
+                </button>
+
+              </td>
+
+
+              <td>
+                ${escapeHTML(student.enroll || "-")}
+              </td>
+
+
+              <td>
+
+                <div class="attendance-buttons">
+
+                  <button
+                    class="p-btn"
+                    onclick="mark('${id}', 'P')"
+                  >
+                    P
+                  </button>
+
+                  <button
+                    class="a-btn"
+                    onclick="mark('${id}', 'A')"
+                  >
+                    A
+                  </button>
+
+                </div>
+
+
+                <span class="status ${statusClass}">
+                  ${todayStatus}
+                </span>
+
+              </td>
+
+
+              <td>
+
+                <strong>
+                  ${calc(student)}
+                </strong>
+
+              </td>
+
+
+              <td>
+
+                <button
+                  class="delete-btn"
+                  onclick="del('${id}')"
+                >
+                  🗑️
+                </button>
+
+              </td>
+
+            </tr>
+
+          `;
+
+        }
+      );
+
+
+      document.getElementById("data").innerHTML =
+        html;
+
+    }
+
+
+    // ==========================================
+    // CALCULATE ATTENDANCE
+    // ==========================================
+
+    function calc(student) {
+
+      const records =
+        student.records || {};
+
+
+      const values =
+        Object.values(records);
+
+
+      if (values.length === 0) {
+
+        return "0%";
+
+      }
+
+
+      const present =
+        values.filter(
+          value => value === "P"
+        ).length;
+
+
+      return (
+        (present / values.length) * 100
+      ).toFixed(1) + "%";
+
+    }
+
+
+    // ==========================================
+    // MARK ATTENDANCE
+    // ==========================================
+
+    function mark(id, value) {
+
+      const today = getToday();
+
+
+      db.ref(
+        "students/" +
+        id +
+        "/records/" +
+        today
+      )
+      .set(value)
+
+      .catch(function(error) {
+
+        console.error(error);
+
+        alert(
+          "Could not save attendance: " +
+          error.message
+        );
+
+      });
+
+    }
+
+
+    // ==========================================
+    // DELETE STUDENT
+    // ==========================================
+
+    function del(id) {
+
+      const student =
+        students[id];
+
+
+      if (!student) {
+
+        return;
+
+      }
+
+
+      const confirmed =
+        confirm(
+          `Delete ${student.name}?\n\nThis will remove the student and their attendance records.`
+        );
+
+
+      if (!confirmed) {
+
+        return;
+
+      }
+
+
+      db.ref(
+        "students/" + id
+      )
+      .remove()
+
+      .catch(function(error) {
+
+        console.error(error);
+
+        alert(
+          "Could not delete student: " +
+          error.message
+        );
+
+      });
+
+    }
+
+
+    // ==========================================
+    // OPEN PROFILE
+    // ==========================================
+
+    function openProfile(id) {
+
+      currentId = id;
+
+
+      const student =
+        students[id];
+
+
+      if (!student) {
+
+        return;
+
+      }
+
+
+      document.getElementById("editName").value =
+        student.name || "";
+
+
+      document.getElementById("editEnroll").value =
+        student.enroll || "";
+
+
+      document.getElementById("modal").style.display =
+        "flex";
+
+    }
+
+
+    // ==========================================
+    // UPDATE STUDENT
+    // ==========================================
+
+    function updateStudent() {
+
+      if (!currentId) {
+
+        return;
+
+      }
+
+
+      const newName =
+        document.getElementById("editName").value.trim();
+
+
+      const newEnroll =
+        document.getElementById("editEnroll").value.trim();
+
+
+      if (!newName || !newEnroll) {
+
+        alert("Please fill in both fields.");
+
+        return;
+
+      }
+
+
+      // Check duplicate enrollment
+
+      const duplicate =
+        Object.entries(students).some(
+          ([id, student]) =>
+            id !== currentId &&
+            student.enroll &&
+            student.enroll.toLowerCase() ===
+            newEnroll.toLowerCase()
+        );
+
+
+      if (duplicate) {
+
+        alert(
+          "Another student already uses this enrollment number."
+        );
+
+        return;
+
+      }
+
+
+      db.ref(
+        "students/" + currentId
+      )
+      .update({
+
+        name: newName,
+
+        enroll: newEnroll
+
+      })
+
+      .then(function() {
+
+        closeModal();
+
+      })
+
+      .catch(function(error) {
+
+        console.error(error);
+
+        alert(
+          "Could not update student: " +
+          error.message
+        );
+
+      });
+
+    }
+
+
+    // ==========================================
+    // CLOSE MODAL
+    // ==========================================
+
+    function closeModal() {
+
+      document.getElementById("modal").style.display =
+        "none";
+
+      currentId = "";
+
+    }
+
+
+    // Close modal by clicking outside
+
+    document.getElementById("modal")
+      .addEventListener(
+        "click",
+        function(event) {
+
+          if (event.target === this) {
+
+            closeModal();
+
+          }
+
+        }
+      );
+
+
+    // ==========================================
+    // ESCAPE HTML
+    // ==========================================
+
+    function escapeHTML(value) {
+
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+    }
+
+
+    // ==========================================
+    // SERVICE WORKER
+    // ==========================================
+
+    if ("serviceWorker" in navigator) {
+
+      window.addEventListener(
+        "load",
+        function() {
+
+          navigator.serviceWorker
+            .register("sw.js")
+            .then(
+              function(registration) {
+
+                console.log(
+                  "Service Worker registered:",
+                  registration.scope
+                );
+
+              }
+            )
+            .catch(
+              function(error) {
+
+                console.log(
+                  "Service Worker registration failed:",
+                  error
+                );
+
+              }
+            );
+
+        }
+      );
+
+    }
+
+
+    // ==========================================
+    // PWA INSTALL BUTTON
+    // ==========================================
+
+    let deferredPrompt;
+
+
+    window.addEventListener(
+      "beforeinstallprompt",
+      function(event) {
+
+        event.preventDefault();
+
+        deferredPrompt = event;
+
+        document.getElementById(
+          "installBtn"
+        ).style.display = "block";
+
+      }
+    );
+
+
+    document.getElementById(
+      "installBtn"
+    ).addEventListener(
+      "click",
+      async function() {
+
+        if (!deferredPrompt) {
+
+          return;
+
+        }
+
+
+        deferredPrompt.prompt();
+
+
+        const result =
+          await deferredPrompt.userChoice;
+
+
+        console.log(
+          "Install result:",
+          result.outcome
+        );
+
+
+        deferredPrompt = null;
+
+
+        document.getElementById(
+          "installBtn"
+        ).style.display = "none";
+
+      }
+    );
+
+  </script>
+
+</body>
+</html>
